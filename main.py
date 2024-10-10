@@ -1,5 +1,7 @@
+import csv
 from dotenv import load_dotenv
 from job_scraper_utils import *
+from datetime import datetime
 
 load_dotenv()
 
@@ -37,21 +39,22 @@ ireland = 'https://ie.indeed.com'
 
 def main():
     driver = configure_webdriver()
-    country = united_states
-    sender_email = os.getenv("SENDER_EMAIL")
-    receiver_email = os.getenv("RECEIVER_EMAIL")
-    password = os.getenv("PASSWORD")
-    job_position = ''
-    job_location = 'remote'
+    country = australia
+    job_position = 'Banker'
+    job_location = 'Melbourne'
     date_posted = 10
+
+    # Create a subdirectory named 'csv_files' if it doesn't exist
+    csv_dir = os.path.join(os.path.dirname(__file__), 'csv_files')
+    os.makedirs(csv_dir, exist_ok=True)
 
     sorted_df = None
 
     try:
-        full_url = search_jobs(driver, country, job_position, job_location, date_posted)
-        df = scrape_job_data(driver, country)
+        job_position, total_jobs = search_jobs(driver, country, job_position, job_location, date_posted)
+        df = scrape_job_data(driver, country, job_position, total_jobs)
 
-        if df.shape[0] == 1:
+        if df.empty or df.shape[0] == 1:
             print("No results found. Something went wrong.")
             subject = 'No Jobs Found on Indeed'
             body = """
@@ -64,23 +67,35 @@ def main():
 
             Feel free to try a manual search with this link and see for yourself:
             Link {}
-            """.format(full_url)
+            """.format(driver.current_url)
 
-            send_email_empty(sender_email, receiver_email, subject, body, password)
+            # You might want to send an email here with the subject and body
+            
         else:
             cleaned_df = clean_data(df)
             sorted_df = sort_data(cleaned_df)
-            # csv_file = save_csv(sorted_df, job_position, job_location)
+            
+            # Check if there are any jobs before saving the CSV
+            if not sorted_df.empty:
+                # Get current date
+                current_date = datetime.now().strftime("%Y-%m-%d")
+                
+                # Create filename with date
+                filename = f"{job_position}_{job_location}_{current_date}.csv"
+                
+                # Full path for the CSV file
+                csv_file = os.path.join(csv_dir, filename)
+                
+                # Save the CSV file with specific parameters to prevent URL truncation
+                sorted_df.to_csv(csv_file, index=False, quoting=csv.QUOTE_ALL, escapechar='\\', encoding='utf-8-sig')
+                print(f"CSV file saved as {csv_file}")
+            else:
+                print("No valid data to save.")
     finally:
         try:
-            if sorted_df is not None:
-                send_email(sorted_df, sender_email, receiver_email, job_position, job_location, password)
-        except Exception as e:
-            print(f"Error sending email: {e}")
-        finally:
-            pass
             driver.quit()
-
+        except Exception as e:
+            print(f"Error quitting the driver: {e}")
 
 if __name__ == "__main__":
     main()

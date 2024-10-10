@@ -1,45 +1,71 @@
-# Indeed Job Scraper
-This Python script allows you to scrape job data from Indeed for a specific job position and location. 
-It utilizes Selenium for web scraping and BeautifulSoup for parsing HTML content. The script supports multiple countries and is capable of sending job results via email in CSV format. Additionally, the script takes screenshots of the job search results.
+## Job Scraper for Indeed
 
+This project consists of two Python scripts designed to scrape job listings from Indeed.com for various countries and job positions.
 
-### Prerequisites
-Before using the script, make sure you have the following installed:
+## Files:
+1. Main.py
+2. job_scraper_utils.py
 
-- [Python 3.x](https://www.python.org/downloads/)
-- [Chrome browser](https://www.google.com/chrome/)
-- [ChromeDriver](https://chromedriver.chromium.org/downloads)
+## Dependencies:
+- Python 3.7+
+- See requirements.txt for a full list of required packages
 
-
-### Installation
-1. Ensure you have Python 3.x installed. Use the following command to install the required dependencies:
-2. Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-This above command will install the requirements from the requirements.txt file
-
-### Usage
-1. ```bash
-   git clone https://github.com/your-username/indeed-job-scraper.git
-
-Go to the IndeedJobScraper directory by typing: cd IndeedJobScraper
-   
-2. Modify the script variables:
-- country: Set the desired country URL.
-- receiver_email: Provide the email address where job results should be sent.
-- job_position: Specify the job position you are looking for.
-- job_location: Specify the job location.
-
-3. Run the script:
+## Setup:
+1. Install the required dependencies:
    ```bash
+   
+   pip install -r requirements.txt
+   
+   ```
+2. Ensure you have Chrome browser installed on your system.
+
+## Usage:
+
+1. main.py:
+   This is the main script that you'll run to scrape job listings.
+
+   - It's currently set up to search for "Banker" jobs in "Melbourne", Australia.
+   - The script will create a 'csv_files' directory in the same location as the script.
+   - The scraped job data will be saved as a CSV file in this directory.
+
+   To run:
+   ```bash
+   
    python main.py
 
-### Results
-The script will generate a CSV file with the job results, take screenshots of the job search results, and send the results to the specified email address.
-If no results are found, an email will be sent with suggestions for refining the search criteria. The email content is customized.
+   ```
+   
+   To modify the search parameters, edit the following variables in the main() function:
+   - country = australia  (Choose from the list of country variables at the top of the script)
+   - job_position = 'Banker'
+   - job_location = 'Melbourne'
+   - date_posted = 10  (Number of days to look back)
 
-### Note: 
-The script uses a headless Chrome browser for web scraping, and it may be necessary to update the ChromeDriver version based on your Chrome browser version.
-Make sure to replace the placeholder email addresses and passwords in the script with your own credentials.
-To enable the send email feature, follow the instructions in this link: [How to Generate an App Password](https://support.google.com/mail/thread/205453566/how-to-generate-an-app-password?hl=en).
-Use this script responsibly.
+2. job_scraper_utils.py:
+   This script contains utility functions used by main.py. It includes functions for:
+   - Configuring the webdriver
+   - Searching for jobs
+   - Scraping job data
+   - Cleaning and sorting the scraped data
+
+   You don't need to run this script directly, but you can modify its functions to change how the scraping works.
+
+Output:
+The script will create a CSV file named in the format:
+{job_position}_{job_location}_{current_date}.csv
+
+This file will contain the following information for each job listing:
+- Link
+- Job Title
+- Company
+- Date Posted
+- Location
+- Job Description
+- Salary
+- Search Query
+
+## Note:
+Web scraping may be against the terms of service of some websites. Ensure you have permission to scrape data from Indeed.com and use the data responsibly. Be mindful of the rate at which you're making requests to avoid overloading the server.
+
+## Note:
+The scrape.bat file, is to be used when you have multiple main.py for different positions and locations. will need to modify ":: Set the list of Python scripts to run"
