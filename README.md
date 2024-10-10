@@ -1,10 +1,11 @@
 ## Job Scraper for Indeed
 
-This project consists of two Python scripts designed to scrape job listings from Indeed.com for various countries and job positions.
+This project consists of two Python scripts & bat file designed to scrape job listings from Indeed.com for various countries and job positions.
 
 ## Files:
 1. Main.py
 2. job_scraper_utils.py
+3. Srape.bat
 
 ## Dependencies:
 - Python 3.7+
