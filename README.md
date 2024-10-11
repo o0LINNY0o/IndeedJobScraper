@@ -1,5 +1,12 @@
 ## Job Scraper for Indeed
 
+## Prerequisites 
+Before using the script, make sure you have the following installed:
+
+- [Python 3.x](https://www.python.org/downloads/)
+- [Chrome browser](https://www.google.com/chrome/)
+- [ChromeDriver](https://chromedriver.chromium.org/downloads)
+
 This project consists of two Python scripts & bat file designed to scrape job listings from Indeed.com for various countries and job positions.
 
 ## Files:
