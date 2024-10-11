@@ -1,25 +1,19 @@
-@echo off
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
-:: Set the list of Python scripts to run
-set "scripts=main.py xxxxx.py xxxxx.py "
-for %%A in (%scripts%) do (
-    echo Running %%A...
-    python "%%A"
-    
-    if !errorlevel! equ 0 (
-        echo Successfully ran %%A
-    ) else (
-        echo Error running %%A
+:: Execute all Python scripts except *_scraper_utils.py
+for %%F in (*.py) do (
+    echo %%F | findstr /i "_scraper_utils.py" >nul
+    if errorlevel 1 (
+        echo Executing: %%F
+        python "%%F"
+
+        :: Calculate a random delay between 1 and 5 seconds
+        set /a "delay=1 + !random! %% 5"
+        echo Waiting for !delay! seconds...
+        timeout /t !delay! /nobreak >nul
     )
-    
-    :: Calculate a random delay 
-    set /a "delay=3 + %random% %% 21"
-    echo Waiting for !delay! seconds...
-    timeout /t !delay! /nobreak >nul
 )
 
-@echo off
 :: Set the directory to csv_files
 cd csv_files
 
