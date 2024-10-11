@@ -76,4 +76,4 @@ This file will contain the following information for each job listing:
 Web scraping may be against the terms of service of some websites. Ensure you have permission to scrape data from Indeed.com and use the data responsibly. Be mindful of the rate at which you're making requests to avoid overloading the server.
 
 ## Note:
-The scrape.bat file, is to be used when you have multiple main.py for different positions and locations. will need to modify ":: Set the list of Python scripts to run"
+The scrape.bat file, is to be used when you have multiple main.py for different positions and locations. The Bat file will search for *.py within the directory and execute.
