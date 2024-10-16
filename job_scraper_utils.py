@@ -50,7 +50,7 @@ def scrape_job_data(driver, country, job_position, total_jobs):
         for box in boxes:
             link = box.find('a').get('href')
             link_full = country + link
-            job_title = box.find('a', class_='jcs-JobTitle css-jspxzf eu4oa1w0').text
+            job_title = box.select_one('h2.jobTitle').text.strip()
             
             company_tag = box.find('span', {'data-testid': 'company-name'})
             company = company_tag.text if company_tag else None
