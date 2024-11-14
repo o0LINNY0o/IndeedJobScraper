@@ -55,14 +55,13 @@ def scrape_job_data(driver, country, job_position, total_jobs):
             company_tag = box.find('span', {'data-testid': 'company-name'})
             company = company_tag.text if company_tag else None
 
-            try:
-                date_posted = box.find('span', class_='date').text
-            except AttributeError:
-                date_posted = box.find('span', {'data-testid': 'myJobsStateDate'}).text.strip()
-
             location_element = box.find('div', {'data-testid': 'text-location'})
             location = location_element.find('span').text if location_element and location_element.find('span') else location_element.text if location_element else ''
 
+            # Extract date posted
+            date_element = box.find('span', {'class': 'date'})
+            date_posted = date_element.text.strip() if date_element else "Unknown"
+            
             # Scrape job description and salary information from the job page
             driver.get(link_full)
             soup_job_page = BeautifulSoup(driver.page_source, 'lxml')
@@ -77,9 +76,13 @@ def scrape_job_data(driver, country, job_position, total_jobs):
                 salary_text = ' '.join([span.get_text(strip=True) for span in spans]) if spans else salary_element.text.strip()
 
             new_data = pd.DataFrame({
-                'Link': [link_full], 'Job Title': [job_title], 'Company': [company],
-                'Date Posted': [date_posted], 'Location': [location],
-                'Job Description': [job_description_text], 'Salary': [salary_text],
+                'Link': [link_full], 
+                'Job Title': [job_title], 
+                'Company': [company],
+                'Date Posted': [date_posted],
+                'Location': [location],
+                'Job Description': [job_description_text], 
+                'Salary': [salary_text],
                 'Search Query': [job_position]
             })
 
@@ -99,6 +102,10 @@ def scrape_job_data(driver, country, job_position, total_jobs):
 
 def clean_data(df):
     def clean_posted(x):
+        if pd.isna(x) or x == "Unknown":
+            return x
+        
+        x = str(x)  # Convert to string to ensure string methods work
         x = x.replace('PostedPosted', '').strip()
         x = x.replace('EmployerActive', '').strip()
         x = x.replace('PostedToday', '0').strip()
@@ -109,17 +116,21 @@ def clean_data(df):
         x = x.replace('+', '').strip()
         return x
 
+    # Handle potential missing values before cleaning
+    df['Date Posted'] = df['Date Posted'].fillna("Unknown")
     df['Date Posted'] = df['Date Posted'].apply(clean_posted)
     return df
 
 def sort_data(df):
     def convert_to_integer(x):
+        if pd.isna(x) or x == "Unknown":
+            return float('inf')
         try:
-            return int(x)
+            return int(str(x)[:2].strip())
         except ValueError:
             return float('inf')
 
-    df['Date_num'] = df['Date Posted'].apply(lambda x: x[:2].strip())
+    df['Date_num'] = df['Date Posted'].apply(lambda x: str(x)[:2].strip())
     df['Date_num2'] = df['Date_num'].apply(convert_to_integer)
     df.sort_values(by=['Date_num2'], inplace=True)
     df = df[['Link', 'Job Title', 'Company', 'Date Posted', 'Location', 'Job Description', 'Salary', 'Search Query']]
