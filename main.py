@@ -42,7 +42,7 @@ def main():
     country = australia
     job_position = 'Banker'
     job_location = 'Melbourne'
-    date_posted = 10
+    date_posted = 5
 
     # Create a subdirectory named 'csv_files' if it doesn't exist
     csv_dir = os.path.join(os.path.dirname(__file__), 'csv_files')
@@ -72,8 +72,7 @@ def main():
             # You might want to send an email here with the subject and body
             
         else:
-            cleaned_df = clean_data(df)
-            sorted_df = sort_data(cleaned_df)
+            sorted_df = sort_data(df)
             
             # Check if there are any jobs before saving the CSV
             if not sorted_df.empty:
