@@ -40,7 +40,7 @@ def search_jobs(driver, country, job_position, job_location, date_posted):
     return job_position, total_jobs
 
 def scrape_job_data(driver, country, job_position, total_jobs):
-    df = pd.DataFrame(columns=['Link', 'Job Title', 'Company', 'Date Posted', 'Location', 'Job Description', 'Salary', 'Search Query'])
+    df = pd.DataFrame(columns=['Link', 'Job Title', 'Company', 'Location', 'Job Description', 'Salary', 'Search Query'])
     job_count = 0
 
     while True:
@@ -57,10 +57,6 @@ def scrape_job_data(driver, country, job_position, total_jobs):
 
             location_element = box.find('div', {'data-testid': 'text-location'})
             location = location_element.find('span').text if location_element and location_element.find('span') else location_element.text if location_element else ''
-
-            # Extract date posted
-            date_element = box.find('span', {'class': 'date'})
-            date_posted = date_element.text.strip() if date_element else "Unknown"
             
             # Scrape job description and salary information from the job page
             driver.get(link_full)
@@ -79,7 +75,6 @@ def scrape_job_data(driver, country, job_position, total_jobs):
                 'Link': [link_full], 
                 'Job Title': [job_title], 
                 'Company': [company],
-                'Date Posted': [date_posted],
                 'Location': [location],
                 'Job Description': [job_description_text], 
                 'Salary': [salary_text],
@@ -100,38 +95,5 @@ def scrape_job_data(driver, country, job_position, total_jobs):
 
     return df
 
-def clean_data(df):
-    def clean_posted(x):
-        if pd.isna(x) or x == "Unknown":
-            return x
-        
-        x = str(x)  # Convert to string to ensure string methods work
-        x = x.replace('PostedPosted', '').strip()
-        x = x.replace('EmployerActive', '').strip()
-        x = x.replace('PostedToday', '0').strip()
-        x = x.replace('PostedJust posted', '0').strip()
-        x = x.replace('today', '0').strip()
-        x = x.replace('days ago', '').strip()
-        x = x.replace('day ago', '').strip()
-        x = x.replace('+', '').strip()
-        return x
-
-    # Handle potential missing values before cleaning
-    df['Date Posted'] = df['Date Posted'].fillna("Unknown")
-    df['Date Posted'] = df['Date Posted'].apply(clean_posted)
-    return df
-
 def sort_data(df):
-    def convert_to_integer(x):
-        if pd.isna(x) or x == "Unknown":
-            return float('inf')
-        try:
-            return int(str(x)[:2].strip())
-        except ValueError:
-            return float('inf')
-
-    df['Date_num'] = df['Date Posted'].apply(lambda x: str(x)[:2].strip())
-    df['Date_num2'] = df['Date_num'].apply(convert_to_integer)
-    df.sort_values(by=['Date_num2'], inplace=True)
-    df = df[['Link', 'Job Title', 'Company', 'Date Posted', 'Location', 'Job Description', 'Salary', 'Search Query']]
-    return df
+    return df[['Link', 'Job Title', 'Company', 'Location', 'Job Description', 'Salary', 'Search Query']]
