@@ -1,38 +1,31 @@
 import os
 import pandas as pd
+import time
 from bs4 import BeautifulSoup
-from selenium import webdriver
+from seleniumbase import Driver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium_stealth import stealth
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 
 def configure_webdriver():
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument('--log-level=1')
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-    stealth(driver,
-            languages=["en-US", "en"],
-            vendor="Google Inc.",
-            platform="Win32",
-            webgl_vendor="Intel Inc.",
-            renderer="Intel Iris OpenGL Engine",
-            fix_hairline=True,
-            )
+    # SeleniumBase provides a simplified way to create a driver with built-in stealth
+    driver = Driver(uc=True,  # Uses undetected-chromedriver
+                   headless=True,
+                   agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     return driver
 
 def search_jobs(driver, country, job_position, job_location, date_posted):
     full_url = f'{country}/jobs?q={"+".join(job_position.split())}&l={job_location}&fromage={date_posted}'
     print(full_url)
     driver.get(full_url)
+    driver.sleep(0.1)  # SeleniumBase's smart wait
+    
     try:
-        job_count_element = driver.find_element(By.XPATH,
-                                                '//div[starts-with(@class, "jobsearch-JobCountAndSortPane-jobCount")]')
-        total_jobs = job_count_element.find_element(By.XPATH, './span').text
+        # Using SeleniumBase's improved element finding
+        job_count_element = driver.find_element(
+            By.CSS_SELECTOR, 
+            'div[class*="jobsearch-JobCountAndSortPane-jobCount"] span'
+        )
+        total_jobs = job_count_element.text
         print(f"{total_jobs} found")
     except NoSuchElementException:
         print("No job count found")
@@ -44,7 +37,9 @@ def scrape_job_data(driver, country, job_position, total_jobs):
     job_count = 0
 
     while True:
-        soup = BeautifulSoup(driver.page_source, 'lxml')
+        # Wait for job listings to be visible
+        driver.wait_for_element_present('div.job_seen_beacon')
+        soup = BeautifulSoup(driver.get_page_source(), 'lxml')
         boxes = soup.find_all('div', class_='job_seen_beacon')
 
         for box in boxes:
@@ -58,9 +53,10 @@ def scrape_job_data(driver, country, job_position, total_jobs):
             location_element = box.find('div', {'data-testid': 'text-location'})
             location = location_element.find('span').text if location_element and location_element.find('span') else location_element.text if location_element else ''
             
-            # Scrape job description and salary information from the job page
+            # Navigate to job details page
             driver.get(link_full)
-            soup_job_page = BeautifulSoup(driver.page_source, 'lxml')
+            driver.wait_for_element_present('#jobDescriptionText')
+            soup_job_page = BeautifulSoup(driver.get_page_source(), 'lxml')
             
             job_description_element = soup_job_page.find('div', id='jobDescriptionText')
             job_description_text = job_description_element.get_text(strip=True) if job_description_element else "Unknown"
@@ -90,6 +86,7 @@ def scrape_job_data(driver, country, job_position, total_jobs):
         if next_page:
             next_page_url = country + next_page.get('href')
             driver.get(next_page_url)
+            driver.sleep(0.1)  # Allow page to load
         else:
             break
 
